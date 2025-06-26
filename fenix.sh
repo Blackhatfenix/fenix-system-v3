@@ -1,171 +1,154 @@
-<!DOCTYPE html>
-<html lang="en-US">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>servidor.com</title>
-    <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAgMBApWzZ/AAAAAASUVORK5CYII=" type="image/png">
-    <link rel="preconnect" href="https://www.google.com" crossorigin>
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+#!/data/data/com.termux/files/usr/bin/bash
+#
+# FENIX SYSTEM V3 – MENU PRINCIPAL
+# “PARA QUE HOUVESSE PAZ, TEVE GUERRA”
+#
 
+# ── CORES ─────────────────────────────────────
+RED='\033[1;31m';  GRN='\033[1;32m'
+YLW='\033[1;33m';  BLU='\033[1;34m'
+NC='\033[0m'
 
-    <style>
-        /* Variables for colors and fonts */
-        :root {
-            --main-bg-color: #2b2b2b;
-            --main-text-color: #fff;
-            --link-color: #76ABAE;
-            --contact-bar-bg: #646464;
-            --contact-bar-text: #eee;
-            --font-family: "Arial", sans-serif;
-            --base-font-size: 16px; /* Base font size for rem calculations */
-        }
+# ── BANNER ────────────────────────────────────
+banner(){
+  clear
+  printf "\n${YLW}=============================================${NC}\n"
+  figlet -f slant "FENIX V3" | lolcat
+  printf "${YLW}=============================================${NC}\n\n"
+  printf "${GRN}Menu Principal | +40 Ferramentas | +100 Melhorias${NC}\n\n"
+}
 
-        /* Global Styles */
-        html {
-            font-size: var(--base-font-size);
-        }
+# ── LOGGING ───────────────────────────────────
+LOGDIR=~/FENIX/logs
+mkdir -p "$LOGDIR"
 
-        body, html {
-            margin: 0;
-            padding: 0;
-            border: 0;
-            display: flex;
-            flex-direction: column;
-            font-family: var(--font-family);
-            background: var(--main-bg-color);
-            color: var(--main-text-color);
-            text-align: center;
-            
-        }
-        
-        a {
-            color: var(--link-color);
-        }
+# ── CHECK DEPENDÊNCIAS ────────────────────────
+deps=(git python3 figlet lolcat dialog tmux nmap)
+for d in "${deps[@]}"; do
+  command -v $d >/dev/null 2>&1 || {
+    echo -e "${RED}Falta: $d${NC}"; exit 1;
+  }
+done
 
-        /* h1 {
-            font-weight: 300;
-            font-style: normal;
-            margin: 45px 0px;
-            text-transform: uppercase;
-        } */
+# ── FUNÇÃO DE EXECUÇÃO stealth/non-stealth ───
+run_tool(){
+  local cmd="$1"; shift
+  if [[ $STEALTH == "y" ]]; then
+    eval "$cmd" &> "$LOGDIR/$(date +%Y%m%d_%H%M%S)_$(echo $cmd|cut -c1-10).log"
+  else
+    eval "$cmd"
+  fi
+  read -p "Pressione Enter…" dummy
+}
 
-        h1 {
-            font-size: clamp(1.5rem, 5vw, 2rem);
+# ── MENU ──────────────────────────────────────
+menu_main(){
+  banner
+  echo -e "${YLW}[S] Stealth Mode: ${STEALTH^^}${NC}\n"
+  echo -e "${BLU}[1] OSINT Profundo${NC}"
+  echo -e "${BLU}[2] Rede / Intranet${NC}"
+  echo -e "${BLU}[3] Espionagem Social${NC}"
+  echo -e "${BLU}[4] Exploração Avançada${NC}"
+  echo -e "${BLU}[5] Toggle Stealth${NC}"
+  echo -e "${BLU}[0] Sair${NC}\n"
+  read -p "Escolha → " opt
+  case $opt in
+    1) menu_osint ;;
+    2) menu_rede ;;
+    3) menu_social ;;
+    4) menu_exploit ;;
+    5) toggle_stealth ;;
+    0) exit 0 ;;
+    *) menu_main ;;
+  esac
+}
 
-            margin: 1rem 0;
-            white-space: normal;
-            text-align: center;
-            text-transform: uppercase;
-        }
+# ── Stealth toggle ───────────────────────────
+STEALTH="n"
+toggle_stealth(){
+  [[ $STEALTH == "n" ]] && STEALTH="y" || STEALTH="n"
+  menu_main
+}
 
+# ── SUBMENUS (exemplo OSINT) ──────────────────
+menu_osint(){
+  banner
+  echo -e "${GRN}→ OSINT Profundo${NC}\n"
+  echo "[1] Sherlock"
+  echo "[2] GHunt"
+  echo "[3] Osintgram"
+  echo "[4] Voltar"
+  read -p "→ " o
+  case $o in
+    1) run_tool "cd ~/FENIX/tools/sherlock && python3 sherlock.py fenixuser" ;;
+    2) run_tool "cd ~/FENIX/tools/GHunt && python3 ghunt.py email user@gmail.com" ;;
+    3) run_tool "cd ~/FENIX/tools/Osintgram && python3 main.py" ;;
+    4) menu_main ;;
+    *) menu_osint ;;
+  esac
+  menu_osint
+}
 
-        #container {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh; /* Full height of the viewport */
-            visibility: hidden;
-            padding: 0 1rem;
-            box-sizing: border-box;
-        }
+menu_rede(){
+  banner
+  echo -e "${GRN}→ Rede / Intranet${NC}\n"
+  echo "[1] Nmap Scan"
+  echo "[2] Responder NBT"
+  echo "[3] Mimikatz"
+  echo "[4] Voltar"
+  read -p "→ " o
+  case $o in
+    1) run_tool "nmap -sS 192.168.0.1/24" ;;
+    2) run_tool "cd ~/FENIX/tools/Responder && python3 Responder.py -I wlan0" ;;
+    3) run_tool "cd ~/FENIX/tools/Seeker && bash mimikatz.sh" ;;
+    4) menu_main ;;
+    *) menu_rede ;;
+  esac
+  menu_rede
+}
 
-        header {
-            
-        }
+menu_social(){
+  banner
+  echo -e "${GRN}→ Espionagem Social${NC}\n"
+  echo "[1] SocialFish"
+  echo "[2] Twint"
+  echo "[3] Maigret"
+  echo "[4] Voltar"
+  read -p "→ " o
+  case $o in
+    1) run_tool "cd ~/FENIX/tools/SocialFish && python3 socialfish.py" ;;
+    2) run_tool "cd ~/FENIX/tools/Twint && python3 twint.py -u user" ;;
+    3) run_tool "cd ~/FENIX/tools/maigret && python3 maigret.py user" ;;
+    4) menu_main ;;
+    *) menu_social ;;
+  esac
+  menu_social
+}
 
-        main {
-            flex: 1;
-            width: 100%;
-            max-width: 700px;
-            margin: auto;
+menu_exploit(){
+  banner
+  echo -e "${GRN}→ Exploração Avançada${NC}\n"
+  echo "[1] sqlmap"
+  echo "[2] Hydra (FTP brute)"
+  echo "[3] XSStrike"
+  echo "[4] Voltar"
+  read -p "→ " o
+  case $o in
+    1) run_tool "cd ~/FENIX/tools/sqlmap && python3 sqlmap.py -u http://target.com --batch" ;;
+    2) run_tool "hydra -l user -P pass.txt ftp://192.168.1.100" ;;
+    3) run_tool "cd ~/FENIX/tools/XSStrike && python3 xsstrike.py -u http://target.com" ;;
+    4) menu_main ;;
+    *) menu_exploit ;;
+  esac
+  menu_exploit
+}
 
-            box-sizing: border-box;
-        }
+# ── INICIAÇÃO ─────────────────────────────────
+if [[ ! -f ~/FENIX/fenix.sh ]]; then
+  echo -e "${RED}Arquivo fenix.sh não encontrado em ~/FENIX!${NC}"
+  exit 1
+fi
 
-        /* Media query for desktop */
-        /* @media screen and (min-width: 768px) {
-            main {
-                width: 700px;
-            }
-        } */
+banner
+menu_main
 
-        footer {
-            font-size: 0.75rem; /* x-small, equivalent to 12px */
-            padding-top: 1.5625rem; /* 25px */
-        }
-
-        #searchbox {
-            padding-top: 3.125rem; /* 50px */
-        }
-
-        /* Top Banner Styles */
-        #banner {
-            width: 100%;
-            color: var(--contact-bar-text);
-            padding: 10px 0;
-            text-align: center;
-            transition: opacity 0.3s ease;
-            opacity: 0;
-        }
-
-        #banner a {
-            color: var(--contact-bar-text);
-            text-decoration: none;
-        }
-
-        #banner a:hover {
-            text-decoration: underline;
-        }
-
-        #rs {
-            margin: 0 auto;
-            width: 100%;
-            max-width: 700px;
-
-            box-sizing: border-box;
-        }
-
-        #ads {
-            margin: 0 auto;
-            width: 100%;
-            max-width: 500px;
-
-            box-sizing: border-box;
-        }
-
-        #message, #rs, #ads, #search {
-            margin-bottom: 2rem;
-        }
-
-        @media screen and (max-width: 480px) {
-            :root {
-                --base-font-size: 14px;
-            }
-            
-            footer {
-                padding: 1rem 0;
-            }
-        }
-        
-    </style>
-</head>
-<body>
-    <div id="container">
-        <div id="banner" style="opacity: 0"></div>
-        <header></header>
-        <main>
-            <div id="message"></div>
-            <div id="rs"></div>
-            <div id="ads"></div>
-            <div id="search"></div>
-        </main>
-
-        <footer>
-            <p>2025 Copyright. All Rights Reserved</p>
-            <p><a href="/_pp">Privacy Policy</a></p>
-        </footer>
-    </div>
-    
-    <script src="/_static/deliver.js?nonce=3498571"></script>
-</body>
-</html>
